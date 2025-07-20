@@ -1,0 +1,93 @@
+#include <iostream>
+#include <windows.h>
+using namespace std;
+
+void symbol()
+{
+    cout <<
+        "   pN▒g▒p▒g▒▒g▒ge   " << endl <<
+        "  ▒▒▒▒▒▒▒▓▓▒▒▒▒▒    " << endl <<
+        "_0▒▓▒▓▒▓▓▒▒▒▒▒▒▒!   " << endl <<
+        "4▒▒▒▒▒▓▓▓▒▓▓▒▒▒▒▒Y " << endl << 
+        "|` ~~#00▓▓0▒MMMM  |  "<< endl << 
+        "|      `gM▓M7     |   " << endl << 
+        "|       00Q0      | " << endl << 
+        "#▒____g▒0▓▓P______0 " << endl << 
+        "#▒0g_p#▓▓04▒▒&,__M# " << endl << 
+        "0▒▒▒▒▒00   ]0▒▒▒▒00 " << endl <<
+        " |\\j▒▒0'   `0▒▒▒4M' " << endl << 
+        " |\\#▒▒&▒▒gg▒▒0& |  " << endl <<
+        " ▒▒00▒▒▒▒00▒▒▒▒▒▒'|  " << endl << 
+        " % ¼▒ \\/  \\/ ▒▒| " << endl <<
+        " M▒9▒,▒▒    ▒ *▒jp " << endl << 
+        " l▒g▒▒] @▒9 ▒▒▒▒p  " << endl << 
+        "  ~▒0▒▒▒p ▒g▒g g     " << endl << 
+        "    @▓▒▒▒▒▒  ▒▒▓ " << endl <<
+        "     M0▓▓  ▓▓^                  by FORELIV" << endl;
+       
+}
+
+bool BlockTaskManager(bool block) {
+    HKEY hKey;
+    LPCSTR subKey = "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System";
+    LPCSTR valueName = "DisableTaskMgr";
+    DWORD value = block ? 1 : 0; // 1 - заблокировать, 0 - разблокировать
+
+    // Открываем или создаем ключ реестра
+    LONG result = RegCreateKeyExA(
+        HKEY_CURRENT_USER,
+        subKey,
+        0,
+        NULL,
+        REG_OPTION_NON_VOLATILE,
+        KEY_WRITE,
+        NULL,
+        &hKey,
+        NULL
+    );
+
+    if (result != ERROR_SUCCESS) {
+        std::cerr << "Ошибка открытия реестра: " << result << std::endl;
+        return false;
+    }
+
+    // Устанавливаем значение
+    result = RegSetValueExA(
+        hKey,
+        valueName,
+        0,
+        REG_DWORD,
+        (const BYTE*)&value,
+        sizeof(DWORD)
+    );
+
+    RegCloseKey(hKey);
+
+    if (result != ERROR_SUCCESS) {
+        std::cerr << "Ошибка записи в реестр: " << result << std::endl;
+        return false;
+    }
+
+    // Применяем изменения (может потребоваться перезагрузка)
+    SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Policy", SMTO_BLOCK, 1000, NULL);
+
+    std::cout << "Диспетчер задач " << (block ? "заблокирован" : "разблокирован") << std::endl;
+    return true;
+}
+
+
+int main()
+{
+    setlocale(LC_ALL, "RU");
+    symbol();
+    int a;
+    cout << "\nБлокировка диспетчера задач.\n0 - Разблокировать.\n1 - Заблокировать.\n";
+    cin >> a;
+    // Ожидаем правильного ввода от пользователя.
+    while (a != 1 or 0) {
+        cout << "Неверное значение. \n";
+        cin >> a;
+    }
+    BlockTaskManager(a);
+    return 0;
+}
